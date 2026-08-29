@@ -1,0 +1,15 @@
+﻿{
+  "name": "@consultorios/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node -e \"console.log('API scaffold lista para migrar a NestJS')\"",
+    "lint": "node -e \"console.log('API scaffold pendiente de NestJS')\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "~6.0.2"
+  }
+}

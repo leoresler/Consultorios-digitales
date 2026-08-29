@@ -1,0 +1,7 @@
+﻿{
+  "extends": "../config-typescript/react-vite.json",
+  "compilerOptions": {
+    "composite": true
+  },
+  "include": ["src"]
+}
