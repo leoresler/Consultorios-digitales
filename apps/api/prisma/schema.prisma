@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model consultorios {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @db.VarChar(50)
+  direccion            String                 @db.VarChar(50)
+  consultorios_medicos consultorios_medicos[]
+  dias_atencion        dias_atencion[]
+  turnos               turnos[]
+}
+
+model consultorios_medicos {
+  id_consultorio Int
+  id_medico      Int
+  consultorios   consultorios @relation(fields: [id_consultorio], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medicos        medicos      @relation(fields: [id_medico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_consultorio, id_medico])
+}
+
+model dias_atencion {
+  id             Int           @id @default(autoincrement())
+  id_medico      Int?
+  id_clinica     Int?
+  dia_semana     String        @db.VarChar(10)
+  hora_inicio    DateTime      @db.Time(6)
+  hora_fin       DateTime      @db.Time(6)
+  duracion_turno Int
+  consultorios   consultorios? @relation(fields: [id_clinica], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medicos        medicos?      @relation(fields: [id_medico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model documentos {
+  id                 Int                  @id @default(autoincrement())
+  nombre             String               @db.VarChar(50)
+  usuarios_documento usuarios_documento[]
+}
+
+model documentos_clinicos {
+  id                 Int               @id @default(autoincrement())
+  id_estudio_clinico Int?
+  archivo            String            @db.VarChar(255)
+  historia_clinica   historia_clinica? @relation(fields: [id_estudio_clinico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model especialidades {
+  id      Int       @id @default(autoincrement())
+  nombre  String    @db.VarChar(50)
+  medicos medicos[]
+  turnos  turnos[]
+}
+
+model genero {
+  id       Int        @id @default(autoincrement())
+  nombre   String     @db.VarChar(200)
+  usuarios usuarios[]
+}
+
+model historia_clinica {
+  id                  Int                   @id @default(autoincrement())
+  idpaciente          Int?
+  idmedico            Int?
+  idtipoestudio       Int?
+  resultados          String?
+  fecharealizacion    DateTime?             @db.Date
+  documentos_clinicos documentos_clinicos[]
+  medicos             medicos?              @relation(fields: [idmedico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pacientes           pacientes?            @relation(fields: [idpaciente], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tipos_estudio       tipos_estudio?        @relation(fields: [idtipoestudio], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model medicamentos {
+  id      Int       @id @default(autoincrement())
+  nombre  String    @db.VarChar(50)
+  recetas recetas[]
+}
+
+model medicos {
+  id                   Int                    @id @default(autoincrement())
+  id_usuario           Int?
+  id_especialidad      Int?
+  consultorios_medicos consultorios_medicos[]
+  dias_atencion        dias_atencion[]
+  historia_clinica     historia_clinica[]
+  especialidades       especialidades?        @relation(fields: [id_especialidad], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios             usuarios?              @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recetas              recetas[]
+  turnos               turnos[]
+}
+
+model pacientes {
+  id               Int                @id @default(autoincrement())
+  id_usuario       Int?
+  cobertura        String?            @db.VarChar(40)
+  historia_clinica historia_clinica[]
+  usuarios         usuarios?          @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recetas          recetas[]
+  turnos           turnos[]
+}
+
+model recetas {
+  id           Int           @id @default(autoincrement())
+  idpaciente   Int?
+  idmedico     Int?
+  idmedicacion Int?
+  dosis        Int?
+  frecuencia   Int?
+  indicada     DateTime?     @db.Date
+  vigencia     DateTime?     @db.Date
+  medicamentos medicamentos? @relation(fields: [idmedicacion], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medicos      medicos?      @relation(fields: [idmedico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pacientes    pacientes?    @relation(fields: [idpaciente], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tipos_estudio {
+  id               Int                @id @default(autoincrement())
+  nombre           String             @db.VarChar(200)
+  historia_clinica historia_clinica[]
+}
+
+model turnos {
+  id              Int             @id @default(autoincrement())
+  id_paciente     Int?
+  id_medico       Int?
+  id_especialidad Int?
+  id_clinica      Int?
+  fecha           DateTime        @db.Date
+  consultorios    consultorios?   @relation(fields: [id_clinica], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  especialidades  especialidades? @relation(fields: [id_especialidad], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medicos         medicos?        @relation(fields: [id_medico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pacientes       pacientes?      @relation(fields: [id_paciente], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model usuarios {
+  id                 Int                  @id @default(autoincrement())
+  id_genero          Int?
+  nombre             String               @db.VarChar(20)
+  apellido           String               @db.VarChar(50)
+  fecha_nacimiento   DateTime?            @db.Date
+  email              String               @unique @db.VarChar(100)
+  contrasena         String               @db.VarChar(100)
+  medicos            medicos[]
+  pacientes          pacientes[]
+  genero             genero?              @relation(fields: [id_genero], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_documento usuarios_documento[]
+}
+
+model usuarios_documento {
+  id_usuario   Int
+  id_documento Int
+  documento    String     @db.VarChar(50)
+  documentos   documentos @relation(fields: [id_documento], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios     usuarios   @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_usuario, id_documento])
+}
