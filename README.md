@@ -1,32 +1,37 @@
-# React + TypeScript + Vite
+﻿# Consultorios Digitales Monorepo
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Estructura
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```text
+.
+├── apps
+│   ├── api
+│   └── web
+├── packages
+│   ├── config-lint
+│   ├── config-typescript
+│   ├── shared-types
+│   └── ui
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Estado actual
+
+- `apps/web`: migracion de la app actual React + Vite.
+- `apps/api`: scaffold inicial para futuro backend.
+- `packages/config-lint`: configuracion compartida de Oxlint.
+- `packages/config-typescript`: bases compartidas de TypeScript.
+- `packages/shared-types`: espacio para tipos/schemas compartidos.
+- `packages/ui`: espacio para componentes compartidos.
+
+## Comandos
+
+```bash
+pnpm install
+pnpm dev
+pnpm lint
+pnpm typecheck
+```
+
+## Nota importante
+
+El repo original era una sola app Vite/React con `npm` y `Oxlint`. La migracion la deja lista como workspace `pnpm`, pero el backend NestJS quedo solo scaffolded porque no existia en el repo original.

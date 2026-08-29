@@ -1,0 +1,9 @@
+﻿{
+  "extends": "../../packages/config-typescript/node.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "../../node_modules/.tmp/apps-web-node.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts"]
+}
