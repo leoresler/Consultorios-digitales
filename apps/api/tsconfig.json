@@ -1,0 +1,17 @@
+﻿{
+  "extends": "../../packages/config-typescript/node.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "verbatimModuleSyntax": false,
+    "allowImportingTsExtensions": false,
+    "erasableSyntaxOnly": false,
+    "types": ["node", "jest"]
+  },
+  "include": ["src"]
+}
