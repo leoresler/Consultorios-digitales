@@ -2,8 +2,12 @@ packages:
   - apps/*
   - packages/*
 allowBuilds:
+  '@nestjs/core': false
+  '@parcel/watcher': false
   '@prisma/client': false
   '@prisma/engines': false
+  esbuild: false
   msgpackr-extract: false
   prisma: false
+  unrs-resolver: false
   workerd: false
