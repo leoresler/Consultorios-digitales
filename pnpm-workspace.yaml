@@ -6,6 +6,7 @@ allowBuilds:
   '@parcel/watcher': false
   '@prisma/client': false
   '@prisma/engines': false
+  bcrypt: false
   esbuild: false
   msgpackr-extract: false
   prisma: false

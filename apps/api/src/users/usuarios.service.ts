@@ -2,23 +2,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '../generated/prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { CrearUsuarioDto } from './dto/crear-usuario.dto';
-import { ActualizarUsuarioDto } from './dto/actualizar-usuario.dto';
-import { Usuario } from './interfaces/user.interface';
-import { UsuarioResponse } from './interfaces/user-response.interface';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { CrearUsuarioDto } from './dto/crear-usuario.dto.js';
+import { ActualizarUsuarioDto } from './dto/actualizar-usuario.dto.js';
+import { Usuario } from './interfaces/user.interface.js';
+import { UsuarioResponse } from './interfaces/user-response.interface.js';
 import * as bcrypt from 'bcrypt';
 
-const usuarioSelectDefecto: Prisma.UsuarioSelect = {
+export const usuarioSelectDefecto: Prisma.usuariosSelect = {
   id: true,
   email: true,
   nombre: true,
   apellido: true,
-  telefono: true,
-  role: true,
-  activo: true,
-  createdAt: true,
+  fecha_nacimiento: true,
+  id_genero: true,
 };
 
 @Injectable()
@@ -26,14 +24,13 @@ export class UsuariosService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(): Promise<UsuarioResponse[]> {
-    return this.prisma.usuario.findMany({
-      where: { activo: true },
+    return this.prisma.usuarios.findMany({
       select: usuarioSelectDefecto,
-    })
+    });
   }
 
   async findOne(id: number): Promise<UsuarioResponse> {
-    const usuario = await this.prisma.usuario.findUnique({
+    const usuario = await this.prisma.usuarios.findUnique({
       where: { id },
       select: usuarioSelectDefecto,
     });
@@ -45,32 +42,32 @@ export class UsuariosService {
   }
 
   async findByEmail(email: string): Promise<Usuario | null> {
-    return this.prisma.usuario.findUnique({ where: { email } });
+    return this.prisma.usuarios.findUnique({ where: { email } });
   }
 
   async create(dto: CrearUsuarioDto): Promise<UsuarioResponse> {
-    return this.prisma.usuario.create({
+    const { password, contrasena, ...rest } = dto as any;
+    const plainPassword = password || contrasena;
+
+    return this.prisma.usuarios.create({
       data: {
-        nombre: dto.nombre,
-        apellido: dto.apellido,
-        email: dto.email,
-        passwordHash: await bcrypt.hash(dto.password, 10),
-        telefono: dto.telefono,
-        role: 'USER',
-        activo: true,
+        ...rest,
+        contrasena: await bcrypt.hash(plainPassword, 10),
       },
       select: usuarioSelectDefecto,
     });
   }
 
   async update(id: number, dto: ActualizarUsuarioDto): Promise<UsuarioResponse> {
-    const {password, ...rest } = dto;
-    const updateData: Prisma.UsuarioUpdateInput = { ...rest };
-    if (password) {
-        updateData.passwordHash = await bcrypt.hash(password, 10);
+    const { password, contrasena, ...rest } = dto as any;
+    const updateData: Prisma.usuariosUpdateInput = { ...rest };
+
+    const plainPassword = password || contrasena;
+    if (plainPassword) {
+      updateData.contrasena = await bcrypt.hash(plainPassword, 10);
     }
 
-    return this.prisma.usuario.update({
+    return this.prisma.usuarios.update({
       where: { id },
       data: updateData,
       select: usuarioSelectDefecto,
@@ -78,9 +75,8 @@ export class UsuariosService {
   }
 
   async delete(id: number): Promise<void> {
-    await this.prisma.usuario.update({
+    await this.prisma.usuarios.delete({
       where: { id },
-      data: { activo: false },
     });
   }
 }
