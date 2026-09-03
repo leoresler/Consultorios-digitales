@@ -40,7 +40,7 @@ export class AuthService {
 
     const user = await this.usuariosService.findByEmail(email);
 
-    if (!user) {
+    if (!user || user?.email != email) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 

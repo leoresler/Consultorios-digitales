@@ -46,12 +46,13 @@ export class UsuariosService {
   }
 
   async create(dto: CrearUsuarioDto): Promise<UsuarioResponse> {
-    const { password, contrasena, ...rest } = dto as any;
+    const { password, contrasena, fecha_nacimiento, ...rest } = dto as any;
     const plainPassword = password || contrasena;
 
     return this.prisma.usuarios.create({
       data: {
         ...rest,
+        fecha_nacimiento: new Date(fecha_nacimiento),
         contrasena: await bcrypt.hash(plainPassword, 10),
       },
       select: usuarioSelectDefecto,

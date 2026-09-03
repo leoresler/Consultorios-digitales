@@ -3,8 +3,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsDate,
   MinLength,
+  IsNumber,
+  IsDateString,
 } from 'class-validator';
 
 export class CrearUsuarioDto {
@@ -21,14 +22,14 @@ export class CrearUsuarioDto {
   email: string;
 
   @IsNotEmpty()
-  @IsDate()
-  fecha_nacimiento: Date;
+  @IsDateString()
+  fecha_nacimiento: string;
 
   @IsNotEmpty()
   @MinLength(8)
   password: string;
 
   @IsOptional()
-  @IsString()
-  telefono?: string;
+  @IsNumber()
+  id_genero?: number;
 }
