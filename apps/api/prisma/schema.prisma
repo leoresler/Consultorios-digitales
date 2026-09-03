@@ -147,6 +147,7 @@ model usuarios {
   contrasena         String               @db.VarChar(100)
   medicos            medicos[]
   pacientes          pacientes[]
+  roles_usuario      roles_usuario[]
   genero             genero?              @relation(fields: [id_genero], references: [id], onDelete: NoAction, onUpdate: NoAction)
   usuarios_documento usuarios_documento[]
 }
@@ -159,4 +160,19 @@ model usuarios_documento {
   usuarios     usuarios   @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([id_usuario, id_documento])
+}
+
+model roles {
+  id            Int             @id @default(autoincrement())
+  nombre        String          @db.VarChar(20)
+  roles_usuario roles_usuario[]
+}
+
+model roles_usuario {
+  id_usuario Int
+  id_roles   Int
+  roles      roles    @relation(fields: [id_roles], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios   usuarios @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_usuario, id_roles])
 }
