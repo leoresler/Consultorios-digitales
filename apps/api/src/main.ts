@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { ValidationPipe } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
@@ -10,6 +11,8 @@ async function bootstrap() {
     origin: ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
   });
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
