@@ -39,6 +39,7 @@ export class AuthService {
     const { email, password } = loginDto;
 
     const user = await this.usuariosService.findByEmail(email);
+
     if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }

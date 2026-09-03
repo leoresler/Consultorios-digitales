@@ -12,7 +12,9 @@
     "verbatimModuleSyntax": false,
     "allowImportingTsExtensions": false,
     "erasableSyntaxOnly": false,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "noUnusedLocals": false, // Deja ejecutar aunque haya variables no usadas, para evitar errores en los test
+    "noUnusedParameters": false
   },
   "include": ["src"]
 }
