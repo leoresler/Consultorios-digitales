@@ -5,4 +5,5 @@ export interface UserSafe {
     id_genero: number;
     email: string;
     name: string;
+    roles_usuario: string[];
 }

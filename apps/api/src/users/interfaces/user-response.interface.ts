@@ -7,5 +7,5 @@ export interface UsuarioResponse {
   apellido: string;
   fecha_nacimiento: Date | null;
   id_genero: number | null;
-  role?: UserRole;
+  roles_usuario: string[];
 }

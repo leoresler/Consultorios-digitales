@@ -143,8 +143,12 @@ model usuarios {
   nombre             String               @db.VarChar(20)
   apellido           String               @db.VarChar(50)
   fecha_nacimiento   DateTime?            @db.Date
-  email              String               @unique @db.VarChar(100)
-  contrasena         String               @db.VarChar(100)
+  email              String?              @unique @db.VarChar(100)
+  telefono           String?              @unique @db.VarChar(20)
+  contrasena         String?              @db.VarChar(100)
+  isApproved         Boolean              @default(false)
+  otpCode            String?
+  otpExpiresAt       DateTime?      
   medicos            medicos[]
   pacientes          pacientes[]
   roles_usuario      roles_usuario[]

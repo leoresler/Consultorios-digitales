@@ -8,6 +8,7 @@ export interface Usuario {
   fecha_nacimiento: Date | null;
   email: string;
   contrasena: string;
+  roles_usuario: string[];
 }
 
 export type UserRole = 'ADMIN' | 'PACIENTE' | 'MEDICO';

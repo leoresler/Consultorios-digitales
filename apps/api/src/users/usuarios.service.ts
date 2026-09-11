@@ -17,6 +17,15 @@ export const usuarioSelectDefecto: Prisma.usuariosSelect = {
   apellido: true,
   fecha_nacimiento: true,
   id_genero: true,
+  roles_usuario: {
+    select: {
+      roles: {
+        select: {
+          nombre: true,
+        },
+      },
+    },
+  },
 };
 
 @Injectable()
@@ -78,6 +87,46 @@ export class UsuariosService {
   async delete(id: number): Promise<void> {
     await this.prisma.usuarios.delete({
       where: { id },
+    });
+  }
+
+  async findByPhone(telefono: string): Promise<Usuario | null> {
+    return this.prisma.usuarios.findFirst({ where: { telefono } });
+  }
+
+  async findOrCreateByPhone(telefono: string, roles_usuario: string = 'PACIENTE'): Promise<any> {
+    let usuario = await this.findByPhone(telefono);
+
+    if(!usuario) {
+      usuario = await this.prisma.usuarios.create({
+        data: {
+          telefono,
+          roles_usuario,
+          isApproved: true,
+        },
+      });
+    }
+
+    return usuario;
+  }
+
+  async saveOtp(id: number, otpCode: string, otpExpiresAt: Date): Promise<void> {
+    await this.prisma.usuarios.update({
+      where: { id },
+      data: {
+        otpCode,
+        otpExpiresAt,
+      },
+    });
+  }
+
+  async clearOtp(id: number): Promise<void> {
+    await this.prisma.usuarios.update({
+      where: { id },
+      data: {
+        otpCode: null,
+        otpExpiresAt: null,
+      },
     });
   }
 }
