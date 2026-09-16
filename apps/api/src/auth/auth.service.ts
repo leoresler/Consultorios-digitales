@@ -34,7 +34,7 @@ export class AuthService {
       throw new ConflictException('El email ya está registrado');
     }
 
-    const user = await this.usuariosService.create(dto);
+    const user = await this.usuariosService.create(dto, 'PACIENTE');
     const roles = user.roles_usuario;
 
     const payload: JwtPayload = {

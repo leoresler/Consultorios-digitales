@@ -130,21 +130,55 @@ export class UsuariosService {
     });
   }
 
-  async create(dto: CrearUsuarioDto): Promise<UsuarioResponse> {
+  async create(
+    dto: CrearUsuarioDto,
+    rolNombre?: string,
+  ): Promise<UsuarioResponse> {
     const { password, contrasena, fecha_nacimiento, ...rest } = dto as any;
     const plainPassword = password || contrasena;
 
-    // 1. Creamos el usuario en la base de datos
-    const nuevoUsuario = await this.prisma.usuarios.create({
-      data: {
-        ...rest,
-        fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
-        contrasena: await bcrypt.hash(plainPassword, 10),
-      },
-      select: usuarioSelectDefecto, // Trae los datos incluyendo la relación de roles
-    });
+    const crear = (tx: Prisma.TransactionClient) =>
+      tx.usuarios.create({
+        data: {
+          ...rest,
+          fecha_nacimiento: fecha_nacimiento ? new Date(fecha_nacimiento) : null,
+          contrasena: bcrypt.hashSync(plainPassword, 10),
+        },
+        select: usuarioSelectDefecto, // Trae los datos incluyendo la relación de roles
+      });
 
-    // 2. Transforma el resultado de Prisma al formato UsuarioResponse
+    let nuevoUsuario: UsuarioConRoles;
+
+    if (rolNombre) {
+      nuevoUsuario = await this.prisma.$transaction(async (tx) => {
+        const rol = await tx.roles.findFirst({ where: { nombre: rolNombre } });
+
+        if (!rol) {
+          throw new NotFoundException(
+            `El rol ${rolNombre} no existe en la base de datos.`,
+          );
+        }
+
+        const usuarioCreado = await crear(tx);
+
+        await tx.roles_usuario.create({
+          data: {
+            id_usuario: usuarioCreado.id,
+            id_roles: rol.id,
+          },
+        });
+
+        // Refresca la relación de roles para la respuesta
+        return tx.usuarios.findUniqueOrThrow({
+          where: { id: usuarioCreado.id },
+          select: usuarioSelectDefecto,
+        });
+      });
+    } else {
+      nuevoUsuario = await crear(this.prisma);
+    }
+
+    // Transforma el resultado de Prisma al formato UsuarioResponse
     return this.mapearAUsuarioResponse(nuevoUsuario);
   }
 
@@ -286,6 +320,42 @@ export class UsuariosService {
     });
 
     return this.mapearAUsuarioResponse(usuario);
+  }
+
+  async asignarRoles(id: number, roles: string[]): Promise<UsuarioResponse> {
+    return this.prisma.$transaction(async (tx) => {
+      const usuario = await tx.usuarios.findUnique({ where: { id } });
+      if (!usuario) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      const rolesEncontrados = await tx.roles.findMany({
+        where: { nombre: { in: roles } },
+      });
+
+      if (rolesEncontrados.length !== roles.length) {
+        const faltantes = roles.filter(
+          (nombre) => !rolesEncontrados.some((rol) => rol.nombre === nombre),
+        );
+        throw new NotFoundException(
+          `Roles no encontrados: ${faltantes.join(', ')}`,
+        );
+      }
+
+      await tx.roles_usuario.createMany({
+        data: rolesEncontrados.map((rol) => ({
+          id_usuario: id,
+          id_roles: rol.id,
+        })),
+      });
+
+      const actualizado = await tx.usuarios.findUniqueOrThrow({
+        where: { id },
+        select: usuarioSelectDefecto,
+      });
+
+      return this.mapearAUsuarioResponse(actualizado);
+    });
   }
 
   async saveOtp(id: number, otpCode: string, otpExpiresAt: Date): Promise<void> {
