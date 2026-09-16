@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
 import { SolicitarOtpDto } from './dto/solicitar-otp.dto.js';
 import { VerificarOtpDto } from './dto/verificar-otp.dto.js';
 import { CompletarPerfilDto } from './dto/completar-perfil.dto.js';
@@ -19,6 +20,11 @@ import { JwtUser } from './interfaces/jwt-user.interface.js';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('register')
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
 
   @Post('login')
   @HttpCode(200)

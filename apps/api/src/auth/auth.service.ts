@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
@@ -12,6 +13,7 @@ import { LoginDto } from './dto/login.dto.js';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './interfaces/jwt-payload.interface.js';
 import { CompletarPerfilDto } from './dto/completar-perfil.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
 import { WhatsappCloudProvider } from './services/whatsapp-cloud.provider.js';
 import { Prisma } from '@prisma/client';
 import { UsuarioResponse } from '../users/interfaces/user-response.interface.js';
@@ -25,6 +27,33 @@ export class AuthService {
     private jwtService: JwtService,
     private whatsappSender: WhatsappCloudProvider,
   ) {}
+
+  async register(dto: RegisterDto) {
+    const existente = await this.usuariosService.findByEmail(dto.email);
+    if (existente) {
+      throw new ConflictException('El email ya está registrado');
+    }
+
+    const user = await this.usuariosService.create(dto);
+    const roles = user.roles_usuario;
+
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      roles_usuario: roles,
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        roles_usuario: roles,
+      },
+    };
+  }
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
