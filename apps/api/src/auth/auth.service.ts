@@ -4,56 +4,55 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsuariosService } from '../users/usuarios.service.js';
+import {
+  rolesDeUsuario,
+  UsuariosService,
+} from '../users/usuarios.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from './dto/register.dto.js';
 import { JwtPayload } from './interfaces/jwt-payload.interface.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { CompletarPerfilDto } from './dto/completar-perfil.dto.js';
+import { WhatsappCloudProvider } from './services/whatsapp-cloud.provider.js';
+import { Prisma } from '@prisma/client';
+import { UsuarioResponse } from '../users/interfaces/user-response.interface.js';
+
+const OTP_TTL_MS = 5 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
   constructor(
     private usuariosService: UsuariosService,
     private jwtService: JwtService,
-    private prisma: PrismaService,
+    private whatsappSender: WhatsappCloudProvider,
   ) {}
-
-  async register(registerDto: RegisterDto) {
-    const user = await this.usuariosService.create(registerDto);
-
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      roles_usuario: user.roles_usuario,
-    };
-
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        roles_usuario: user.roles_usuario,
-      },
-    };
-  }
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    const user = await this.usuariosService.findByEmail(email);
+    const user = await this.usuariosService.findByEmailWithPassword(email);
 
-    if (!user || user?.email != email) {
+    if (
+      !user ||
+      !user.email ||
+      user.email !== email ||
+      !user.contrasena
+    ) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    /*if (user.roles_usuario === 'DOCTOR' && !user.isApproved) {
-      throw new ForbiddenException('Tu cuenta de médico aún no ha sido aprobada por un administrador.');
-    }*/
+    const roles = rolesDeUsuario(user.roles_usuario);
 
-    const passwordMatched: boolean = await bcrypt.compare(password, user.contrasena,);
-    
+    if (roles.includes('MEDICO') && !user.isApproved) {
+      throw new ForbiddenException(
+        'Tu cuenta de médico aún no ha sido aprobada por un administrador.',
+      );
+    }
+
+    const passwordMatched: boolean = await bcrypt.compare(
+      password,
+      user.contrasena,
+    );
+
     if (!passwordMatched) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -61,56 +60,107 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      roles_usuario: user.roles_usuario,
+      telefono: user.telefono ?? undefined,
+      roles_usuario: roles,
     };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         email: user.email,
+        telefono: user.telefono,
         nombre: user.nombre,
-        roles_usuario: user.roles_usuario,
+        roles_usuario: roles,
       },
     };
   }
 
-  async requesPatientOtp(telefono: string) {
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  async requestOtp(telefono: string) {
+    const normalizado = this.normalizarTelefono(telefono);
+    const user = await this.usuariosService.findOrCreateByPhone(
+      normalizado,
+      'PACIENTE',
+    );
 
-    const user = await this.usuariosService.findOrCreateByPhone(telefono, 'PACIENTE');
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + OTP_TTL_MS);
 
     await this.usuariosService.saveOtp(user.id, otpCode, otpExpiresAt);
+    await this.whatsappSender.sendOtp(normalizado, otpCode);
 
-    return { message: 'Codigo OTP enviado con exito al telefono'};
+    return {
+      message: 'Código OTP enviado por WhatsApp',
+      expira_en_segundos: OTP_TTL_MS / 1000,
+    };
   }
 
-  async verifyPatientOtp(telefono: string, otp: string) {
-    const user = await this.usuariosService.findByPhone(telefono);
+  async verifyOtp(telefono: string, codigo: string) {
+    const normalizado = this.normalizarTelefono(telefono);
+    const user = await this.usuariosService.findByPhoneWithCredentials(
+      normalizado,
+    );
 
-    if (!user || user.otpCode !== otp || new Date() > user.otpExpiresAt) {
-      throw new UnauthorizedException('Codigo OTP inválido o expirado.');
+    const valido = !!user && user.otpCode === codigo;
+    const expirado =
+      !user?.otpExpiresAt ||
+      new Date().getTime() > user.otpExpiresAt.getTime();
+
+    if (!user || !valido || expirado) {
+      throw new UnauthorizedException('Código OTP inválido o expirado');
     }
 
+    // Uso único: se limpia el código apenas se valida
     await this.usuariosService.clearOtp(user.id);
 
+    const roles = rolesDeUsuario(user.roles_usuario);
     const payload: JwtPayload = {
-      access_token: this.jwtService.sign(payload),
+      sub: user.id,
+      telefono: user.telefono ?? undefined,
+      email: user.email ?? undefined,
+      roles_usuario: roles,
+    };
+
+    const access_token = this.jwtService.sign(payload);
+
+    return {
+      access_token,
       user: {
         id: user.id,
-        telefono: user.phone,
-        roles_usuario: user.roles_usuario,
+        telefono: user.telefono,
+        email: user.email,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        roles_usuario: roles,
       },
     };
   }
 
-  async saveOtp(id: NumberConstructor, otpCode: string, otpExpiresAt: Date): Promise<void> {
-    await this.prisma.usuarios.update({
-      where: { id },
-      data: {
-        otpCode,
-        otpExpiresAt,
-      },
-    });
+  async getMe(id: number): Promise<UsuarioResponse> {
+    return this.usuariosService.findOne(id);
+  }
+
+  async updateMe(
+    id: number,
+    dto: CompletarPerfilDto,
+  ): Promise<UsuarioResponse> {
+    const data: Prisma.usuariosUpdateInput = {};
+
+    if (dto.nombre !== undefined) data.nombre = dto.nombre;
+    if (dto.apellido !== undefined) data.apellido = dto.apellido;
+    if (dto.email !== undefined) data.email = dto.email;
+    if (dto.id_genero !== undefined) {
+      data.genero = { connect: { id: dto.id_genero } };
+    }
+    if (dto.fecha_nacimiento !== undefined) {
+      data.fecha_nacimiento = new Date(dto.fecha_nacimiento);
+    }
+
+    return this.usuariosService.updatePerfil(id, data);
+  }
+
+  private normalizarTelefono(telefono: string): string {
+    const limpio = telefono.replace(/\s|-/g, '');
+    return limpio.startsWith('+') ? limpio : `+${limpio}`;
   }
 }

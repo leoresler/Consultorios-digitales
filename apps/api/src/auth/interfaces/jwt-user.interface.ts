@@ -1,7 +1,7 @@
-import { UserRole } from '../../users/interfaces/user.interface.js';
-
 export interface JwtUser {
   id: number;
-  email: string;
+  email?: string;
+  telefono?: string;
   roles_usuario: string[];
+  isApproved: boolean;
 }

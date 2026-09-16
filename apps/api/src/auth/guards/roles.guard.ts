@@ -18,14 +18,18 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    if (!requiredRoles) {
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<{ user?: JwtUser }>();
     const user = request.user;
 
-    if (!user || !requiredRoles.includes(user.role)) {
+    const tieneRol =
+      !!user &&
+      user.roles_usuario.some((rol) => requiredRoles.includes(rol as UserRole));
+
+    if (!tieneRol) {
       throw new ForbiddenException(
         'No tienes permiso para acceder a este recurso',
       );

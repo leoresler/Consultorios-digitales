@@ -7,11 +7,13 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service.js';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto.js';
 import { ActualizarUsuarioDto } from './dto/actualizar-usuario.dto.js';
+import { CrearMedicoAdminDto } from './dto/crear-medico-admin.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/role.decorator.js';
@@ -23,8 +25,8 @@ export class UsuariosController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  findAll() {
-    return this.usuariosService.findAll();
+  findAll(@Query('pendientes') pendientes?: string) {
+    return this.usuariosService.findAll(pendientes === 'true');
   }
 
   @Get(':id')
@@ -41,6 +43,13 @@ export class UsuariosController {
     return this.usuariosService.create(dto);
   }
 
+  @Post('medico')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  createMedicoAdmin(@Body() dto: CrearMedicoAdminDto) {
+    return this.usuariosService.createMedicoAdmin(dto);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -49,6 +58,13 @@ export class UsuariosController {
     @Body() dto: ActualizarUsuarioDto,
   ) {
     return this.usuariosService.update(id, dto);
+  }
+
+  @Patch(':id/aprobar')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  aprobarMedico(@Param('id', ParseIntPipe) id: number) {
+    return this.usuariosService.aprobarMedico(id);
   }
 
   @Delete(':id')

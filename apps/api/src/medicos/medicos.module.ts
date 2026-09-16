@@ -9,4 +9,4 @@ import { PrismaModule } from '../prisma/prisma.module.js';
   providers: [MedicosService],
   exports: [MedicosService],
 })
-export class UsuariosModule {}
+export class MedicosModule {}

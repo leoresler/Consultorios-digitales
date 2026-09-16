@@ -8,6 +8,9 @@ export interface Usuario {
   fecha_nacimiento: Date | null;
   email: string;
   contrasena: string;
+  telefono: string;
+  otpCode?: string | null;
+  otpExpiresAt?: Date;
   roles_usuario: string[];
 }
 

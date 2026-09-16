@@ -3,7 +3,7 @@ export interface MedicoConRelaciones {
     usuarios: {
         id: number;
         nombre: string;
-        email: string;
+        email: string | null;
     } | null;
     especialidades: {
         id: number;

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { WhatsappCloudProvider } from './services/whatsapp-cloud.provider.js';
 import { UsuariosModule } from '../users/usuarios.module.js';
 import { JwtStrategy } from './strategy/jwt.strategy.js';
 import { PassportModule } from '@nestjs/passport';
@@ -24,7 +25,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     PassportModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, WhatsappCloudProvider],
   exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
 })
 export class AuthModule {}

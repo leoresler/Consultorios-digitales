@@ -27,12 +27,12 @@ export class MedicosService {
             id: medico.id,
             usuario: medico.usuarios ? {
                 id: medico.usuarios.id,
-                nombre: medico.usuarios.nombre, // Asegúrate de que coincida con tus columnas reales de la tabla usuarios
-                email: medico.usuarios.email,
+                nombre: medico.usuarios.nombre,
+                email: medico.usuarios.email ?? undefined,
             } : undefined,
             especialidad: medico.especialidades ? {
                 id: medico.especialidades.id,
-                nombre: medico.especialidades.nombre, // Asegúrate de que coincida con tus columnas reales de especialidades
+                nombre: medico.especialidades.nombre,
             } : undefined,
         };
     }
@@ -51,7 +51,7 @@ export class MedicosService {
             usuario: medico.usuarios ? {
                 id: medico.usuarios.id,
                 nombre: medico.usuarios.nombre,
-                email: medico.usuarios.email,
+                email: medico.usuarios.email ?? undefined,
             } : undefined,
             especialidad: medico.especialidades ? {
                 id: medico.especialidades.id,
@@ -66,7 +66,7 @@ export class MedicosService {
             usuario: medico.usuarios ? {
                 id: medico.usuarios.id,
                 nombre: medico.usuarios.nombre,
-                email: medico.usuarios.email,
+                email: medico.usuarios.email ?? undefined,
             } : undefined,
             especialidad: medico.especialidades ? {
                 id: medico.especialidades.id,
