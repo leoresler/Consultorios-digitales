@@ -9,4 +9,7 @@ export interface MedicoConRelaciones {
         id: number;
         nombre: string;
     } | null;
+    _count: {
+        consultorios_medicos: number;
+    };
 }
