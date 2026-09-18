@@ -9,9 +9,20 @@ import { ActualizarConsultorioDto } from "./dto/ActualizarConsultorio.dto.js";
 export class ConsultoriosService {
     constructor(private prisma: PrismaService) { }
 
+    private consultoriosInclude = {
+        consultorios_medicos: {
+            select: {
+                medicos: {
+                    select: { id: true, usuarios: { select: { nombre: true } } },
+                },
+            },
+        },
+    } satisfies Prisma.consultoriosInclude;
+
     async findOne(id: number): Promise<ConsultorioResponseDto> {
         const consultorio = await this.prisma.consultorios.findUnique({
             where: { id },
+            include: this.consultoriosInclude,
         });
 
         if (!consultorio) {
@@ -22,7 +33,9 @@ export class ConsultoriosService {
     }
 
     async findAll(): Promise<ConsultorioResponseDto[]> {
-        const consultorios = await this.prisma.consultorios.findMany();
+        const consultorios = await this.prisma.consultorios.findMany({
+            include: this.consultoriosInclude,
+        });
 
         return consultorios.map((consultorio) => this.toResponseDto(consultorio));
     }
@@ -31,11 +44,18 @@ export class ConsultoriosService {
         id: number;
         nombre: string;
         direccion: string;
+        consultorios_medicos?: {
+            medicos: { id: number; usuarios: { nombre: string } | null };
+        }[];
     }): ConsultorioResponseDto {
         return {
             id: consultorio.id,
             nombre: consultorio.nombre,
             direccion: consultorio.direccion,
+            medicos: (consultorio.consultorios_medicos ?? []).map((cm) => ({
+                id: cm.medicos.id,
+                nombre: cm.medicos.usuarios?.nombre,
+            })),
         };
     }
 

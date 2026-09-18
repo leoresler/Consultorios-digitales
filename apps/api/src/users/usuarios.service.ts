@@ -304,7 +304,13 @@ export class UsuariosService {
       await tx.medicos.create({
         data: {
           id_usuario: usuario.id,
-          id_especialidad: dto.id_especialidad,
+          especialidades_medicos: dto.especialidades?.length
+            ? {
+                create: dto.especialidades.map((id_especialidad) => ({
+                  especialidades: { connect: { id: id_especialidad } },
+                })),
+              }
+            : undefined,
         },
       });
 

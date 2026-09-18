@@ -50,10 +50,19 @@ model documentos_clinicos {
 }
 
 model especialidades {
-  id      Int       @id @default(autoincrement())
-  nombre  String    @db.VarChar(50)
-  medicos medicos[]
-  turnos  turnos[]
+  id                     Int                    @id @default(autoincrement())
+  nombre                 String                 @db.VarChar(50)
+  especialidades_medicos especialidades_medicos[]
+  turnos                 turnos[]
+}
+
+model especialidades_medicos {
+  id_especialidad Int
+  id_medico       Int
+  especialidades  especialidades @relation(fields: [id_especialidad], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medicos         medicos        @relation(fields: [id_medico], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_especialidad, id_medico])
 }
 
 model genero {
@@ -82,16 +91,15 @@ model medicamentos {
 }
 
 model medicos {
-  id                   Int                    @id @default(autoincrement())
-  id_usuario           Int?
-  id_especialidad      Int?
-  consultorios_medicos consultorios_medicos[]
-  dias_atencion        dias_atencion[]
-  historia_clinica     historia_clinica[]
-  especialidades       especialidades?        @relation(fields: [id_especialidad], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  usuarios             usuarios?              @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  recetas              recetas[]
-  turnos               turnos[]
+  id                     Int                    @id @default(autoincrement())
+  id_usuario             Int?
+  consultorios_medicos   consultorios_medicos[]
+  dias_atencion          dias_atencion[]
+  especialidades_medicos especialidades_medicos[]
+  historia_clinica       historia_clinica[]
+  usuarios               usuarios?              @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recetas                recetas[]
+  turnos                 turnos[]
 }
 
 model pacientes {

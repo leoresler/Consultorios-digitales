@@ -6,10 +6,16 @@ export class MedicoResponseDto {
         email?: string;
     };
 
-    especialidad?: {
+    especialidades?: {
         id: number;
         nombre?: string;
-    }
+    }[];
+
+    consultorios?: {
+        id: number;
+        nombre: string;
+        direccion: string;
+    }[];
 
     tieneConsultorios?: boolean;
 }

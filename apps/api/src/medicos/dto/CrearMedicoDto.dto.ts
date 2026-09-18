@@ -1,4 +1,4 @@
-import { IsInt, IsOptional } from "class-validator";
+import { IsArray, IsInt, IsOptional } from "class-validator";
 
 export class CrearMedicoDto {
     @IsOptional()
@@ -6,6 +6,7 @@ export class CrearMedicoDto {
     id_usuario?: number;
 
     @IsOptional()
-    @IsInt({ message: 'El ID de especialidad debe ser un numero entero' })
-    id_especialidad?: number;
+    @IsArray({ message: 'Las especialidades deben ser un array de IDs' })
+    @IsInt({ each: true, message: 'Cada ID de especialidad debe ser un numero entero' })
+    especialidades?: number[];
 }

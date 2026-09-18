@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDateString,
   IsEmail,
   IsInt,
@@ -38,6 +39,7 @@ export class CrearMedicoAdminDto {
   id_genero?: number;
 
   @IsOptional()
-  @IsInt()
-  id_especialidad?: number;
+  @IsArray()
+  @IsInt({ each: true })
+  especialidades?: number[];
 }
